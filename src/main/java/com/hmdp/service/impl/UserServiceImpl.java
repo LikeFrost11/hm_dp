@@ -55,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail("手机号格式不正确！");
         }
         //2.生成验证码
-        String code = RandomUtil.randomString(6);
+        String code = RandomUtil.randomNumbers(6);
         //3.保存验证码到redis
         stringRedisTemplate.opsForValue().set(CODE_KEY + phone, code, CODE_TTL, TimeUnit.MINUTES);
         //4.发送验证码（模拟）
