@@ -27,7 +27,7 @@ public class VoucherOrderController {
     @Resource
     private IVoucherOrderService voucherOrderService;
     @PostMapping("seckill/{id}")
-    public Result seckillVoucher(@PathVariable("id") Long voucherId) {
+    public Result seckillVoucher(@PathVariable("id") Long voucherId) throws InterruptedException {
         log.info("秒杀优惠券: voucherId={}", voucherId);
         return voucherOrderService.orderVocher(voucherId);
     }
