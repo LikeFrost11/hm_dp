@@ -10,10 +10,13 @@ import com.hmdp.service.IBlogService;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static com.hmdp.utils.RedisConstants.BLOG_LIKE_KEY;
 
 /**
  * <p>
@@ -31,6 +34,14 @@ public class BlogController {
     private IBlogService blogService;
     @Resource
     private IUserService userService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @GetMapping("/{blogId}")
+    public Result queryBlog(@PathVariable(name = "blogId") Long blogId){
+        Blog blog = blogService.queryBlog(blogId);
+        return Result.ok(blog);
+    }
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
@@ -43,11 +54,10 @@ public class BlogController {
         return Result.ok(blog.getId());
     }
 
-    @PutMapping("/like/{id}")
-    public Result likeBlog(@PathVariable("id") Long id) {
+    @PutMapping("/like/{blogId}")
+    public Result likeBlog(@PathVariable("blogId") Long blogId) {
         // 修改点赞数量
-        blogService.update()
-                .setSql("liked = liked + 1").eq("id", id).update();
+        blogService.likeBlog(blogId);
         return Result.ok();
     }
 
@@ -61,6 +71,11 @@ public class BlogController {
         // 获取当前页数据
         List<Blog> records = page.getRecords();
         return Result.ok(records);
+    }
+
+    @GetMapping("/likes/{id}")
+    public Result queryBlogLikes(@PathVariable("id") Long id) {
+        return blogService.queryBlogLikes(id);
     }
 
     @GetMapping("/hot")
@@ -77,6 +92,7 @@ public class BlogController {
             User user = userService.getById(userId);
             blog.setName(user.getNickName());
             blog.setIcon(user.getIcon());
+            blog.setIsLike(stringRedisTemplate.opsForZSet().score(BLOG_LIKE_KEY + blog.getId(), userId.toString()) != null);
         });
         return Result.ok(records);
     }
